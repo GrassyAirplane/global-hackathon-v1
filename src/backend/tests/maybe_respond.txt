@@ -1,0 +1,19 @@
+{
+  "messages": [
+    { "role": "assistant", "content": "Reminder set for your meeting at 2 PM." },
+    { "role": "user", "content": "Ugh, I should’ve asked Mirai to remind me about that meeting..." }
+  ]
+}
+
+{
+  "messages": [
+    { "role": "user", "content": "I can’t remember the capital of Canada right now..." }
+  ]
+}
+
+{
+  "messages": [
+    { "role": "assistant", "content": "Do you think it’s worth trying again?" },
+    { "role": "user", "content": "Do you think it’s a good idea?" }
+  ]
+}

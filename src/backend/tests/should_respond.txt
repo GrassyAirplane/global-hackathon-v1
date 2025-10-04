@@ -1,0 +1,18 @@
+{
+  "messages": [
+    { "role": "user", "content": "Hey Mirai, what’s the weather like today?" }
+  ]
+}
+
+{
+  "messages": [
+    { "role": "assistant", "content": "You mentioned wanting to try cooking Japanese food. Any dish in mind?" },
+    { "role": "user", "content": "Maybe sushi? But I don’t know where to start." }
+  ]
+}
+
+{
+  "messages": [
+    { "role": "user", "content": "So anyway, I was thinking we could go later in the evening... Oh, Mirai, can you check what time the restaurant closes?" }
+  ]
+}

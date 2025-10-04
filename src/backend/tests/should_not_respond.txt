@@ -1,0 +1,24 @@
+{
+  "messages": [
+    { "role": "user", "content": "Yeah, Mirai’s been kinda useful actually. It’s helped me keep track of my stuff." }
+  ]
+}
+
+{
+  "messages": [
+    { "role": "user", "content": "Okay... what should I do next... maybe I’ll just take a break for a bit." }
+  ]
+}
+
+{
+  "messages": [
+    { "role": "user", "content": "Hold on, I’m talking to Euan about that project, not you, Mirai." }
+  ]
+}
+
+{
+  "messages": [
+    { "role": "user", "content": "Mirai told me that yesterday, but I didn’t really believe it." }
+  ]
+}
+
