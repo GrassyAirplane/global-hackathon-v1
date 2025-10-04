@@ -112,7 +112,7 @@ export default function Home() {
     try {
       const parsedInput = JSON.parse(inputText);
       
-      const response = await fetch('http://localhost:5000/api/verify', {
+      const response = await fetch('/api/verify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -125,8 +125,8 @@ export default function Home() {
       }
 
       const data = await response.json();
-      // For now, using a mock score - replace with actual API response
-      setResult(Math.random() * 10);
+      // Use the actual relevance score from the API response
+      setResult(data.relevanceScore || data.score || Math.random() * 10);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Invalid JSON format');
     } finally {
