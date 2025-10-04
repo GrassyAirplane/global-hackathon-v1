@@ -1,16 +1,19 @@
-const OpenAI = require('openai');
+import express from 'express';
+import cors from 'cors';
+import modelAPI from "./utils/gpt/gpt.js";
 
-// Configure OpenAI client to use Docker Model Runner (DMR)
-const openai = new OpenAI({
-  baseURL: 'http://localhost:12434/engines/v1',
-  apiKey: 'dmr', // DMR doesn't require a real API key
-});
+const app = express();
+app.use(express.json());
+app.use(cors({
+  origin: "http://localhost:3000",
+  credentials: true
+}));
 
 async function testDMR() {
   try {
     console.log('Testing Docker Model Runner...\n');
     
-    const completion = await openai.chat.completions.create({
+    const completion = await modelAPI.chat.completions.create({
       model: 'ai/llama3.2:1B-Q8_0',
       messages: [
         {

@@ -6,8 +6,7 @@ AI companions generally require a wakeword / activation button, think siri, goog
 to someone else, when someone is talking to you and expecting a response, and know
 generally when to reply even when a response is not expected. Architecting Mirai, 
 I realise if I'm looking to build a real-time conversational companion, the experience needs to be seamless and as-close to human-like as possible. Hence
-the need for a relevance detector, providing a general metric towards indicating if 
-xyz is being spoken to and a response is expected. 
+the need for a relevance detector, providing a general metric towards indicating if xyz is being spoken to and a response is expected. 
 
 # Diagram
 Speech-to-Text
