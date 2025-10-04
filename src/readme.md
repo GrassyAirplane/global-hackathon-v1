@@ -36,3 +36,4 @@ If respond → Main Conversational LLM generates response
 # Use guide
 1) Make sure to have docker desktop version 4.47 installed
 2) usign docker model llama
+3) docker model run ai/llama3.2:1B-Q8_0
