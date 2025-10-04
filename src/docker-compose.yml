@@ -33,3 +33,8 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: secret
+
+
+models: 
+  llm:
+    model: ai/llama3.2:1B-Q8_0
