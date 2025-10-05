@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import LoadingModal from './components/LoadingModal';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -11,6 +12,11 @@ interface TestExample {
   title: string;
   data: { messages: Message[] };
   category: 'should_respond' | 'maybe_respond' | 'should_not_respond';
+}
+
+interface AnalysisResult {
+  score: number;
+  reasoning: string;
 }
 
 const testExamples: TestExample[] = [
@@ -98,37 +104,63 @@ const categoryLabels = {
 
 export default function Home() {
   const [inputText, setInputText] = useState('');
-  const [result, setResult] = useState<number | null>(null);
+  const [result, setResult] = useState<AnalysisResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async () => {
+    const handleSubmit = async () => {
     if (!inputText.trim()) return;
     
     setLoading(true);
     setError(null);
-    setResult(null);
-
+    
     try {
       const parsedInput = JSON.parse(inputText);
       
+      // Create AbortController for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 90000); // 90 second timeout
+      
       const response = await fetch('/api/verify', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(parsedInput),
+        signal: controller.signal
       });
-
+      
+      clearTimeout(timeoutId);
+      
       if (!response.ok) {
-        throw new Error('Failed to analyze conversation');
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-
+      
       const data = await response.json();
-      // Use the actual relevance score from the API response
-      setResult(data.relevanceScore || data.score || Math.random() * 10);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Invalid JSON format');
+      console.log('API Response:', data); // Debug log
+      
+      // Handle the response format from the backend
+      if (typeof data.relevanceScore === 'number') {
+        setResult({ 
+          score: data.relevanceScore, 
+          reasoning: data.reasoning || '' 
+        });
+      } else if (data.relevanceScore && typeof data.relevanceScore === 'object') {
+        setResult(data.relevanceScore);
+      } else {
+        throw new Error('Invalid response format');
+      }
+    } catch (error) {
+      console.error('Error calling API:', error);
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          setError('Request timed out. The AI model may be taking longer than expected (90+ seconds).');
+        } else if (error.message.includes('JSON')) {
+          setError('Invalid JSON format. Please check your input.');
+        } else {
+          setError(error.message);
+        }
+      } else {
+        setError('An unexpected error occurred');
+      }
     } finally {
       setLoading(false);
     }
@@ -169,7 +201,7 @@ export default function Home() {
       <div className="max-w-6xl mx-auto px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
           {/* Input Section */}
-          <div className="flex flex-col" style={{ height: '500px' }}>
+          <div className="flex flex-col">
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-3">
                 Conversation JSON
@@ -187,26 +219,56 @@ export default function Home() {
               disabled={loading || !inputText.trim()}
               className="w-full bg-gray-900 text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors mb-6"
             >
-              {loading ? 'Analyzing...' : 'Analyze Relevance'}
+              {loading ? (
+                <div className="flex items-center justify-center space-x-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                  <span>Analyzing with Llama 3.2...</span>
+                </div>
+              ) : (
+                'Analyze Relevance'
+              )}
             </button>
 
-            {/* Results Area - Always reserve space */}
-            <div className="flex-1 min-h-[100px]">
-              {result !== null && (
+            {/* Model Info */}
+            {!loading && !result && !error && (
+              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 text-sm">
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                  <span>Using self-hosted Llama 3.2:1B model - processing may take 30-90 seconds</span>
+                </div>
+              </div>
+            )}
+
+            {/* Results Area */}
+            <div className="mt-4">
+              {result !== null && !loading && (
                 <div className="p-4 bg-gray-50 rounded-lg border">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-gray-700">Relevance Score</span>
-                    <span className={`text-2xl font-bold ${getScoreColor(result)}`}>
-                      {result.toFixed(1)}/10
+                    <span className={`text-2xl font-bold ${getScoreColor(result.score)}`}>
+                      {result.score.toFixed(1)}/10
                     </span>
                   </div>
-                  <div className={`text-sm font-medium ${getScoreColor(result)}`}>
-                    {getScoreLabel(result)}
+                  <div className={`text-sm font-medium ${getScoreColor(result.score)}`}>
+                    {getScoreLabel(result.score)}
                   </div>
+                  {result.reasoning && (
+                    <div className="mt-4 p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
+                      <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                        <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                        </svg>
+                        Analysis Reasoning
+                      </h4>
+                      <div className="prose prose-sm max-w-none">
+                        <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">{result.reasoning}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
-              {error && (
+              {error && !loading && (
                 <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
                   {error}
                 </div>
@@ -217,7 +279,7 @@ export default function Home() {
           {/* Examples Section */}
           <div className="flex flex-col">
             <h2 className="text-lg font-medium text-gray-900 mb-4">Test Examples</h2>
-            <div className="space-y-4 overflow-y-auto pr-2" style={{ height: '500px' }}>
+            <div className="space-y-4 overflow-y-auto pr-2 max-h-96">
               {testExamples.map((example, index) => (
                 <div
                   key={index}
@@ -261,6 +323,9 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* Loading Modal */}
+      <LoadingModal isOpen={loading} />
     </div>
   );
 }
